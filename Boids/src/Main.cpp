@@ -117,7 +117,7 @@ int main(void)
 
 	glm::vec3 location = glm::vec3(0.0f, 0.0f, 0.0f);
 
-	static const int numOfBoids = 1000;
+	static const int numOfBoids = 100;
 
 	//Boid boids[numOfBoids];
 
@@ -131,7 +131,9 @@ int main(void)
 	boids.reserve(numOfBoids);
 
 	for (int i = 0; i < numOfBoids; i++) {
-		boids.emplace_back(genRandomFloat(), genRandomFloat(), genRandomFloat() * 2.0f * 3.1415f, 0.01f );
+		boids.emplace_back(genRandomFloat(), genRandomFloat(), 
+			genRandomFloat() * 2.0f * 3.1415f, genRandomFloat()*0.01f + 0.005, // Random speed
+			glm::vec4(genRandomFloat(), genRandomFloat(), genRandomFloat(), 1.0f));
 	}
 
 	/* Render Loop */
@@ -182,11 +184,12 @@ int main(void)
 
 			// transformation matrix
 			glm::mat4 trans = glm::mat4(1.0f);
-			trans = glm::translate(trans, glm::vec3(boids[i].x, boids[i].y, 0.0f));
+			trans = glm::translate(trans, glm::vec3(boids[i].getX(), boids[i].getY(), 0.0f));
 			trans = glm::rotate(trans, boids[i].rotation, glm::vec3(0.0f, 0.0f, 1.0f));
 			trans = glm::scale(trans, glm::vec3(0.1f, 0.1f, 0.1f));
 
 			TriangleShader.setMat4("transform", trans);
+			TriangleShader.setVec4("colour", boids[i].colour);
 
 
 			// Render triangle
