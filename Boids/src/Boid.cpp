@@ -3,17 +3,19 @@
 #include "glm.hpp"
 #include "stdlib.h"
 #include <time.h>
+#include <vector>
 
 float genRandF() {
 	return ((float)rand() / (RAND_MAX));
 }
 
-Boid::Boid(float x, float y, float angle, float speed, glm::vec4 colour)
-	: angle(angle), speed(speed), colour(colour)
+Boid::Boid(float x, float y, float angle, float maxSpeed, glm::vec4 colour)
+	: angle(angle), maxSpeed(maxSpeed), colour(colour)
 {
 	position.x = x;
 	position.y = y;
-	velocity = glm::vec3(speed * cos(angle), speed * sin(angle), 0.0f);
+	position.z = 0.0f;
+	velocity = glm::vec3(maxSpeed * cos(angle), maxSpeed * sin(angle), 0.0f);
 	accelation = glm::vec3(0.0f, 0.00f, 0.0f);
 }
 
@@ -23,18 +25,27 @@ Boid::Boid(){
 
 	//location = glm::vec2( ((float)rand() / (RAND_MAX)) ,  ((float)rand() / (RAND_MAX)));
 	position = glm::vec3(0.0f, 0.0f, 0.0f); // Location
-	velocity = glm::vec3(genRandF() * 0.01f, genRandF() * 0.01f, 1.0f); // Speed and direction
+	velocity = glm::vec3(genRandF() * 0.01f, genRandF() * 0.01f, 0.0f); // Speed and direction
 	accelation = glm::vec3(0.0f, 0.0f, 0.0f); // Change in direction or speed
 	angle = (float)rand() * 3.1415;
-	speed = 0.01;
-	colour = glm::vec4(1.0f, 0.5f, 0.3f, 1.0);
+	maxSpeed = 0.01;
+	colour = glm::vec4(1.0f, 0.5f, 0.3f, 1.0f);
 }
 
 void Boid::move() {
 
 	//velocity.x = speed * cos(angle);
 	//velocity.y = speed * sin(angle);
-	velocity += accelation;
+
+	velocity += separation() * 0.02f;
+	velocity += cohesion() * 0.0005f;
+	velocity += alignment() * 0.05f;
+	
+	if ( glm::length(velocity) > 0.01f) {
+		//printf("Velocity Length %f\n", glm::length(velocity));
+		velocity = glm::normalize(velocity) * maxSpeed;
+	}
+
 	position += velocity;
 
 	if (position.x > 1.1f) {
@@ -61,3 +72,44 @@ float Boid::getX() {
 float Boid::getY() {
 	return position.y;
 };
+
+glm::vec3 Boid::separation() {
+	auto separation = glm::vec3(0.0f, 0.0f, 0.0f);
+
+	const float careDistance = 0.15f;
+
+	float distance;
+	for (int i = 0; i < flockMates->size(); i++) {
+		distance = glm::length(position - (*flockMates)[i].position);
+		if (distance < 0.15f) {
+			// Care more about nearby flockmates
+			separation += (position - (*flockMates)[i].position) * ((careDistance - distance) / careDistance);
+		}
+	}
+	return separation;
+}
+
+glm::vec3 Boid::cohesion() {
+	auto averagePos = glm::vec3(0.0f, 0.0f, 0.0f);
+
+	for (int i = 0; i < flockMates->size(); i++) {
+		if (glm::length(position - (*flockMates)[i].position) < 0.5f) {
+			averagePos += (*flockMates)[i].position;
+		}
+	}
+	averagePos /= flockMates->size();
+	return averagePos - position;
+}
+
+glm::vec3 Boid::alignment() {
+	auto averageAlignment = glm::vec3(0.0f, 0.0f, 0.0f);
+	int count = 0;
+	for (int i = 0; i < flockMates->size(); i++) {
+		if (glm::length(position - (*flockMates)[i].position) < 0.5f) {
+			averageAlignment += (*flockMates)[i].velocity;
+			count++;
+		}
+	}
+	averageAlignment /= count;
+	return averageAlignment;
+}

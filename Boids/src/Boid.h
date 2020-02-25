@@ -1,17 +1,24 @@
 #pragma once
 #include <glm.hpp>
+#include <vector>
+#include "glm.hpp"
 
 class Boid {
+private:
+	glm::vec3 separation();
+	glm::vec3 cohesion();
+	glm::vec3 alignment();
 public:
-	/*glm::vec2 location*/;
 	float angle;
-	float speed;
+	float maxSpeed;
 	glm::vec3 position;
 	glm::vec3 velocity;
 	glm::vec3 accelation;
 	glm::vec4 colour;
 
-	Boid(float xPos, float yPos, float angle, float speed, glm::vec4 colour = glm::vec4(1.0f, 0.5f, 0.3f, 1.0));
+	std::vector<Boid>* flockMates;
+
+	Boid(float xPos, float yPos, float angle, float maxSpeed = 0.01f, glm::vec4 colour = glm::vec4(1.0f, 0.5f, 0.3f, 1.0));
 	Boid();
 
 	void move();

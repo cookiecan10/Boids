@@ -124,7 +124,7 @@ int main(void)
 
 	//Boid boid = Boid(genRandomFloat(), genRandomFloat(), 0.01f, 0.01f);
 
-	Flock flock(30);
+	Flock flock(70);
 		
 	/* Render Loop */
 	while (!glfwWindowShouldClose(window))
