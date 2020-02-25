@@ -38,5 +38,8 @@
     <ClInclude Include="src\Boid.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Flock.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

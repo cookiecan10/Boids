@@ -160,6 +160,7 @@
     <ClCompile Include="src\stb_image.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Flock.h" />
     <ClInclude Include="src\Boid.h" />
     <ClInclude Include="src\shader_s.h" />
     <ClInclude Include="src\stb_image.h" />

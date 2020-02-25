@@ -168,9 +168,9 @@ int main(void)
 		TriangleShader.use();
 
 		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-			boids[0].rotation += .04f;
+			boids[0].angle += .04f;
 		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-			boids[0].rotation -= .04f;
+			boids[0].angle -= .04f;
 
 		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
 			boids[0].speed -= .001f;
@@ -180,12 +180,12 @@ int main(void)
 		for (int i = 0; i < numOfBoids; i++) {
 			boids[i].move();
 
-			//printf("Boid Location %f\n", boids[0].speed);
+			//printf("Boid rotation %f\n", boids[0].getAngle());
 
 			// transformation matrix
 			glm::mat4 trans = glm::mat4(1.0f);
 			trans = glm::translate(trans, glm::vec3(boids[i].getX(), boids[i].getY(), 0.0f));
-			trans = glm::rotate(trans, boids[i].rotation, glm::vec3(0.0f, 0.0f, 1.0f));
+			trans = glm::rotate(trans, boids[i].getAngle(), glm::vec3(0.0f, 0.0f, 1.0f));
 			trans = glm::scale(trans, glm::vec3(0.1f, 0.1f, 0.1f));
 
 			TriangleShader.setMat4("transform", trans);
