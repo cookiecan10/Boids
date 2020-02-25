@@ -52,7 +52,7 @@ void Boid::move() {
 };
 
 float Boid::getAngle() {
-	//return glm::atan(velocity.y, velocity.x); // atan2, if (x < 0) return (result + PI)
+	return glm::atan(velocity.y, velocity.x); // atan2, if (x < 0) return (result + PI)
 }
 
 float Boid::getX() {

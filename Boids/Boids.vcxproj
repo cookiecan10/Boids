@@ -155,13 +155,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\Boid.cpp" />
+    <ClCompile Include="src\Flock.cpp" />
     <ClCompile Include="src\glad.c" />
     <ClCompile Include="src\Main.cpp" />
     <ClCompile Include="src\stb_image.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Flock.h" />
     <ClInclude Include="src\Boid.h" />
+    <ClInclude Include="src\Flock.h" />
     <ClInclude Include="src\shader_s.h" />
     <ClInclude Include="src\stb_image.h" />
   </ItemGroup>

@@ -9,6 +9,7 @@
 #include <vector>
 #include "stdlib.h"
 #include <time.h>
+#include "Flock.h"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 //void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -17,10 +18,6 @@ void processInput(GLFWwindow *window);
 
 unsigned int SCR_WIDTH = 800;
 unsigned int SCR_HEIGHT = 600;
-
-float genRandomFloat() {
-	return ((float)rand() / (RAND_MAX));
-}
 
 
 int main(void)
@@ -127,15 +124,8 @@ int main(void)
 
 	//Boid boid = Boid(genRandomFloat(), genRandomFloat(), 0.01f, 0.01f);
 
-	std::vector<Boid> boids;
-	boids.reserve(numOfBoids);
-
-	for (int i = 0; i < numOfBoids; i++) {
-		boids.emplace_back(genRandomFloat(), genRandomFloat(), 
-			genRandomFloat() * 2.0f * 3.1415f, genRandomFloat()*0.01f + 0.005, // Random speed
-			glm::vec4(genRandomFloat(), genRandomFloat(), genRandomFloat(), 1.0f));
-	}
-
+	Flock flock(30);
+		
 	/* Render Loop */
 	while (!glfwWindowShouldClose(window))
 	{
@@ -167,29 +157,30 @@ int main(void)
 		// Use Shader
 		TriangleShader.use();
 
-		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-			boids[0].angle += .04f;
-		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-			boids[0].angle -= .04f;
+		//if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+		//	boids[0].angle += .04f;
+		//if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+		//	boids[0].angle -= .04f;
 
-		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-			boids[0].speed -= .001f;
-		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-			boids[0].speed += .001f;
+		//if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+		//	boids[0].speed -= .001f;
+		//if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+		//	boids[0].speed += .001f;
 
-		for (int i = 0; i < numOfBoids; i++) {
-			boids[i].move();
+		flock.moveFlock();
+
+		for (int i = 0; i < flock.numOfBoids; i++) {
 
 			//printf("Boid rotation %f\n", boids[0].getAngle());
 
 			// transformation matrix
 			glm::mat4 trans = glm::mat4(1.0f);
-			trans = glm::translate(trans, glm::vec3(boids[i].getX(), boids[i].getY(), 0.0f));
-			trans = glm::rotate(trans, boids[i].getAngle(), glm::vec3(0.0f, 0.0f, 1.0f));
+			trans = glm::translate(trans, glm::vec3(flock.boids[i].getX(), flock.boids[i].getY(), 0.0f));
+			trans = glm::rotate(trans, flock.boids[i].getAngle(), glm::vec3(0.0f, 0.0f, 1.0f));
 			trans = glm::scale(trans, glm::vec3(0.1f, 0.1f, 0.1f));
 
 			TriangleShader.setMat4("transform", trans);
-			TriangleShader.setVec4("colour", boids[i].colour);
+			TriangleShader.setVec4("colour", flock.boids[i].colour);
 
 
 			// Render triangle
