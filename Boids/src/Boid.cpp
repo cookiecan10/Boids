@@ -4,6 +4,7 @@
 #include "stdlib.h"
 #include <time.h>
 #include <vector>
+#include <gtc/matrix_transform.hpp>
 
 float genRandF() {
 	return ((float)rand() / (RAND_MAX));
@@ -38,13 +39,13 @@ void Boid::move() {
 	//velocity.y = speed * sin(angle);
 
 	velocity += separation() * 0.02f;
+	clampVec(velocity, maxSpeed);
+
 	velocity += cohesion() * 0.0005f;
+	clampVec(velocity, maxSpeed);
+
 	velocity += alignment() * 0.05f;
-	
-	if ( glm::length(velocity) > 0.01f) {
-		//printf("Velocity Length %f\n", glm::length(velocity));
-		velocity = glm::normalize(velocity) * maxSpeed;
-	}
+	clampVec(velocity, maxSpeed);
 
 	position += velocity;
 
@@ -112,4 +113,21 @@ glm::vec3 Boid::alignment() {
 	}
 	averageAlignment /= count;
 	return averageAlignment;
+}
+
+void Boid::setFlockMates(std::vector<Boid>* flock) {
+	flockMates = flock;
+}
+
+void Boid::getTransMatrix(glm::mat4 &trans) {
+	trans = glm::mat4(1.0f);
+	trans = glm::translate(trans, glm::vec3(getX(), getY(), 0.0f));
+	trans = glm::rotate(trans, getAngle(), glm::vec3(0.0f, 0.0f, 1.0f));
+	trans = glm::scale(trans, glm::vec3(0.1f, 0.1f, 0.1f));
+}
+
+void Boid::clampVec(glm::vec3 &vec, float c = 0.01f) {
+	if (glm::length(vec) > 0.01f) {
+		vec = glm::normalize(vec) * c;
+	}
 }

@@ -10,15 +10,22 @@
 #include "stdlib.h"
 #include <time.h>
 #include "Flock.h"
+#include <string>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-//void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+//void mouse_cursorPos_callback(GLFWwindow* window, double xpos, double ypos);
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 //void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
 
 unsigned int SCR_WIDTH = 800;
 unsigned int SCR_HEIGHT = 600;
 
+double xPos, yPos;
+
+Flock flock(10);
+
+float genRandomFloat();
 
 int main(void)
 {
@@ -58,9 +65,12 @@ int main(void)
 	//Tell OpenGL which function to set a callback for when chaning window sizes
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
+	//Tell OpenGL which function to set a callback for when clicking with mouse
+	glfwSetMouseButtonCallback(window, mouse_button_callback);
+
 	Shader TriangleShader("../Boids/src/shaders/Triangle.vs", "../Boids/src/shaders/Triangle.fs");
-
-
+	Shader TriangleShaderInstanced("../Boids/src/shaders/TriangleInstanced.vs", "../Boids/src/shaders/TriangleInstanced.fs");
+	
 	int nrAttributes;
 	glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &nrAttributes);
 	std::cout << "Maximum nr of vertex attributes supported: " << nrAttributes << std::endl;
@@ -72,7 +82,6 @@ int main(void)
 		 0.5f,  0.0f, 0.0f,   1.0f, 1.0f, // right
 		-0.5f, -0.3f, 0.0f,   1.0f, 0.0f, // bottom left
 		-0.5f,  0.3f, 0.0f,   0.0f, 0.0f, // top left
-		-0.5f,  0.5f, 0.0f,   0.0f, 1.0f  // top left 
 	};
 	unsigned int indices[] = {
 		0, 1, 2, // first triangle
@@ -112,20 +121,10 @@ int main(void)
 	float deltaTime = 0.0f;
 	float lastFrame = 0.0f;
 
-	glm::vec3 location = glm::vec3(0.0f, 0.0f, 0.0f);
+	int flockSize;
 
-	static const int numOfBoids = 100;
+	glm::mat4 translations[10000];
 
-	//Boid boids[numOfBoids];
-
-	//for (int i = 0; i < numOfBoids; i++) {
-	//	boids[i] = Boid(genRandomFloat(),genRandomFloat(), genRandomFloat() * 2 * 3.1415, 0.01f);
-	//}
-
-	//Boid boid = Boid(genRandomFloat(), genRandomFloat(), 0.01f, 0.01f);
-
-	Flock flock(70);
-		
 	/* Render Loop */
 	while (!glfwWindowShouldClose(window))
 	{
@@ -135,20 +134,28 @@ int main(void)
 		if (currentTime - lastTime >= 1.0) { // If last prinf() was more than 1 sec ago
 			// printf and reset timer
 			printf("%f ms/frame\n", 1000.0 / double(nbFrames));
+			printf("%i boids\n", flockSize);
+			//flock.addBoid();
 			nbFrames = 0;
 			lastTime += 1.0;
 		}
 
-		//printf("random: %f\n", genRandomFloat());
 		// per-frame time logic
 		// --------------------
 		float currentFrame = glfwGetTime();
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 
+		flock.moveFlock();
+		flockSize = flock.getFlockSize();
+
 		// Input
 		processInput(window);
 
+		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+			flock.addBoid(0.0f, 0.0f, 0.01f, glm::vec4(genRandomFloat(), genRandomFloat(), genRandomFloat(), 1.0f));
+			printf("Flocksize %i\n", flock.getFlockSize());
+		}
 
 		/* Render here */
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -157,37 +164,40 @@ int main(void)
 		// Use Shader
 		TriangleShader.use();
 
-		//if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-		//	boids[0].angle += .04f;
-		//if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-		//	boids[0].angle -= .04f;
-
-		//if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-		//	boids[0].speed -= .001f;
-		//if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-		//	boids[0].speed += .001f;
-
-		flock.moveFlock();
-
-		for (int i = 0; i < flock.numOfBoids; i++) {
-
-			//printf("Boid rotation %f\n", boids[0].getAngle());
+		// Normal
+		for (int i = 0; i < flockSize; i++) {
 
 			// transformation matrix
-			glm::mat4 trans = glm::mat4(1.0f);
-			trans = glm::translate(trans, glm::vec3(flock.boids[i].getX(), flock.boids[i].getY(), 0.0f));
-			trans = glm::rotate(trans, flock.boids[i].getAngle(), glm::vec3(0.0f, 0.0f, 1.0f));
-			trans = glm::scale(trans, glm::vec3(0.1f, 0.1f, 0.1f));
+			flock.boids[i].getTransMatrix(translations[i]);
 
-			TriangleShader.setMat4("transform", trans);
+			// Set uniforms
+			TriangleShader.setMat4("transform", translations[i]);
 			TriangleShader.setVec4("colour", flock.boids[i].colour);
-
 
 			// Render triangle
 			glBindVertexArray(VAO);
 			glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
-			//glDrawArrays(GL_TRIANGLES, 0, 3);
 		}
+
+
+		// TriangleShaderInstanced.use();
+		//
+		//// Instanced
+		//for (int i = 0; i < flockSize; i++) {
+
+		//	// transformation matrix
+		//	flock.boids[i].getTransMatrix(translations[i]);
+
+		//	// Set Uniforms
+		//	std::stringstream ss;
+		//	std::string index;
+		//	ss << i;
+		//	index = ss.str();
+		//	TriangleShaderInstanced.setMat4(("transforms[" + index + "]").c_str(), translations[i]);
+
+		//	// Render triangle
+		//}
+		//glDrawElementsInstanced(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0, flockSize);
 
 		// check and call events and swap the buffers
 		glfwPollEvents();			/* Swap front and back buffers */
@@ -223,4 +233,15 @@ void processInput(GLFWwindow *window)
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
 	glViewport(0, 0, width, height);
+}
+
+// Define callback for mouse button
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+{
+	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+		//Tell OpenGL to automaticly set the cursor position in these variables
+		glfwGetCursorPos(window, &xPos, &yPos);
+		//printf("Left mouse button pressed at %f %f\n", xPos/SCR_WIDTH, yPos/SCR_HEIGHT);
+		flock.addBoid((xPos / SCR_WIDTH)*2 -1, ((yPos / SCR_HEIGHT)*2 -1) * -1, 0.01f, glm::vec4(genRandomFloat(), genRandomFloat(), genRandomFloat(), 1.0f));
+	}
 }
