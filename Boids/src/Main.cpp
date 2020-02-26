@@ -68,8 +68,8 @@ int main(void)
 	//Tell OpenGL which function to set a callback for when clicking with mouse
 	glfwSetMouseButtonCallback(window, mouse_button_callback);
 
-	Shader TriangleShader("../Boids/src/shaders/Triangle.vs", "../Boids/src/shaders/Triangle.fs");
-	Shader TriangleShaderInstanced("../Boids/src/shaders/TriangleInstanced.vs", "../Boids/src/shaders/TriangleInstanced.fs");
+	Shader TriangleShader("./src/shaders/Triangle.vs", "./src/shaders/Triangle.fs");
+	Shader TriangleShaderInstanced("./src/shaders/TriangleInstanced.vs", "./src/shaders/TriangleInstanced.fs");
 	
 	int nrAttributes;
 	glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &nrAttributes);
