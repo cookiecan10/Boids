@@ -127,11 +127,12 @@ void Boid::setFlockMates(std::vector<Boid>* flock) {
 	flockMates = flock;
 }
 
-void Boid::getTransMatrix(glm::mat4 &trans) {
-	trans = glm::mat4(1.0f);
+glm::mat4 Boid::getTransMatrix() {
+	glm::mat4 trans = glm::mat4(1.0f);
 	trans = glm::translate(trans, glm::vec3(getX(), getY(), 0.0f));
 	trans = glm::rotate(trans, getAngle(), glm::vec3(0.0f, 0.0f, 1.0f));
 	trans = glm::scale(trans, glm::vec3(0.1f, 0.1f, 0.1f));
+	return trans;
 }
 
 void Boid::clampVec(glm::vec3 &vec, float clampLength = 0.01f) {

@@ -7,13 +7,13 @@ class Flock {
 public:
 	int numOfBoids;
 	std::vector<Boid> boids;
-	glm::mat4* translations;
+	std::vector<glm::mat4> translations;
 
 	Flock(const int flockSize = 30);
 
 	void moveFlock();
 	int getFlockSize();
 	void addBoid(float x = 0.0f, float y = 0.0f, float maxSpeed = 0.01f, glm::vec4 colour = glm::vec4(1.0f, .5f, .3f, 1.0f));
-	glm::mat4* getTranslations();
-	glm::vec4* getColours();
+	std::vector<glm::mat4> getTranslations();
+	std::vector<glm::vec4> getColours();
 };

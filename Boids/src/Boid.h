@@ -27,5 +27,5 @@ public:
 	float getX();
 	float getY();
 	void setFlockMates(std::vector<Boid>* flock);
-	void getTransMatrix(glm::mat4 &trans);
+	glm::mat4 getTransMatrix();
 };

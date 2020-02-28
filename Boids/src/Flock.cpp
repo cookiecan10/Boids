@@ -10,8 +10,8 @@ float genRandomFloat() {
 
 Flock::Flock(const int flockSize)
 {
-	boids.reserve(flockSize+100);
-	translations = new glm::mat4[flockSize];
+	boids.reserve(flockSize);
+	translations.reserve(flockSize);
 
 	for (int i = 0; i < flockSize; i++) {
 		boids.emplace_back(genRandomFloat(), genRandomFloat(),
@@ -33,24 +33,27 @@ void Flock::addBoid(float x, float y, float maxSpeed, glm::vec4 colour) {
 	for (int i = 0; i < getFlockSize(); i++) {
 		boids[i].setFlockMates(&boids);
 	}
-	translations = new glm::mat4[getFlockSize()];
+	translations.emplace_back(boids[boids.size()-1].getTransMatrix());
 }
 
 int Flock::getFlockSize() {
 	return boids.size();
 }
 
-glm::mat4* Flock::getTranslations() {
+std::vector<glm::mat4> Flock::getTranslations() {
+	std::vector<glm::mat4> translations;
+	translations.reserve(boids.size());
 	for (int i = 0; i < getFlockSize(); i++) {
-		boids[i].getTransMatrix(translations[i]);
+		translations.emplace_back(boids[i].getTransMatrix());
 	}
 	return translations;
 }
 
-glm::vec4* Flock::getColours() {
-	glm::vec4* colours = new glm::vec4[getFlockSize()];
+std::vector<glm::vec4> Flock::getColours() {
+	std::vector<glm::vec4> colours;
+	colours.reserve(getFlockSize());
 	for (int i = 0; i < getFlockSize(); i++) {
-		colours[i] = boids[i].colour;
+		colours.push_back(boids[i].colour);
 	}
 	return colours;
 }

@@ -48,7 +48,9 @@ double xPos, yPos;
 const static int INITIAL_FLOCK_SIZE = 1;
 
 Flock flock(INITIAL_FLOCK_SIZE);
-glm::vec4 *colours = new glm::vec4[INITIAL_FLOCK_SIZE];
+//glm::vec4 *colours = new glm::vec4[INITIAL_FLOCK_SIZE];
+
+std::vector<glm::vec4> colours;
 
 float genRandomFloat();
 
@@ -117,10 +119,11 @@ int main(void)
 	};
 
 	// For instance matrix buffer
-	glm::mat4 *translations = new glm::mat4[INITIAL_FLOCK_SIZE];
+	std::vector<glm::mat4> translations;
+	translations = flock.getTranslations();
 
 	// For instance colour buffer
-
+	colours = flock.getColours();
 
 	// Vertex Array Object
 	unsigned int VAO;		// Buffer that stores whatever is bound
@@ -171,7 +174,7 @@ int main(void)
 	unsigned int instanceColourVBO;
 	GLCall(glGenBuffers(1, &instanceColourVBO));
 	GLCall(glBindBuffer(GL_ARRAY_BUFFER, instanceColourVBO));
-	GLCall(glBufferData(GL_ARRAY_BUFFER, INITIAL_FLOCK_SIZE * sizeof(glm::mat4), &colours[0], GL_DYNAMIC_DRAW));
+	GLCall(glBufferData(GL_ARRAY_BUFFER, INITIAL_FLOCK_SIZE * sizeof(glm::mat4), &colours.front(), GL_DYNAMIC_DRAW));
 
 	GLCall(glEnableVertexAttribArray(6));
 	GLCall(glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(glm::vec4), (void*)0));
@@ -244,7 +247,7 @@ int main(void)
 		GLCall(glBufferData(GL_ARRAY_BUFFER, flock.getFlockSize() * sizeof(glm::mat4), &translations[0], GL_DYNAMIC_DRAW));
 
 		GLCall(glBindBuffer(GL_ARRAY_BUFFER, instanceColourVBO));
-		GLCall(glBufferData(GL_ARRAY_BUFFER, flock.getFlockSize() * sizeof(glm::vec4), &colours[0], GL_DYNAMIC_DRAW));
+		GLCall(glBufferData(GL_ARRAY_BUFFER, flock.getFlockSize() * sizeof(glm::vec4), &colours.front(), GL_DYNAMIC_DRAW));
 
 
 		// Render triangle
@@ -263,8 +266,8 @@ int main(void)
 	glDeleteBuffers(1, &EBO);
 
 	// My de-allocations
-	delete(translations);
-	delete(colours);
+	//delete[] translations;
+	//delete[] colours;
 
 	// glfw: terminate, clearing all previously allocated GLFW resources.
 	// ------------------------------------------------------------------
