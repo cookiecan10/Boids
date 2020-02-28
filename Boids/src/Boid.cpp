@@ -95,12 +95,15 @@ glm::vec3 Boid::cohesion() {
 
 	const float careDistance = 0.5f;
 
+	int count = 0;
 	for (int i = 0; i < flockMates->size(); i++) {
 		if (glm::length(position - (*flockMates)[i].position) < careDistance) {
 			averagePos += (*flockMates)[i].position;
+			count++;
 		}
 	}
-	averagePos /= flockMates->size();
+	//averagePos /= flockMates->size();		// More interesting
+	averagePos /= count;					// More Acurate
 	return averagePos - position;
 }
 
@@ -131,8 +134,8 @@ void Boid::getTransMatrix(glm::mat4 &trans) {
 	trans = glm::scale(trans, glm::vec3(0.1f, 0.1f, 0.1f));
 }
 
-void Boid::clampVec(glm::vec3 &vec, float c = 0.01f) {
+void Boid::clampVec(glm::vec3 &vec, float clampLength = 0.01f) {
 	if (glm::length(vec) > 0.01f) {
-		vec = glm::normalize(vec) * c;
+		vec = glm::normalize(vec) * clampLength;
 	}
 }
