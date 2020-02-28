@@ -46,3 +46,11 @@ glm::mat4* Flock::getTranslations() {
 	}
 	return translations;
 }
+
+glm::vec4* Flock::getColours() {
+	glm::vec4* colours = new glm::vec4[getFlockSize()];
+	for (int i = 0; i < getFlockSize(); i++) {
+		colours[i] = boids[i].colour;
+	}
+	return colours;
+}

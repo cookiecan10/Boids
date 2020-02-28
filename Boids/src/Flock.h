@@ -15,5 +15,5 @@ public:
 	int getFlockSize();
 	void addBoid(float x = 0.0f, float y = 0.0f, float maxSpeed = 0.01f, glm::vec4 colour = glm::vec4(1.0f, .5f, .3f, 1.0f));
 	glm::mat4* getTranslations();
-	glm::mat4* getColours();
+	glm::vec4* getColours();
 };

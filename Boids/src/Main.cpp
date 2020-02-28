@@ -45,10 +45,10 @@ unsigned int SCR_HEIGHT = 600;
 
 double xPos, yPos;
 
-const static int INITIAL_FLOCK_SIZE = 700;
-glm::mat4 *translations = new glm::mat4[INITIAL_FLOCK_SIZE];
+const static int INITIAL_FLOCK_SIZE = 1;
 
 Flock flock(INITIAL_FLOCK_SIZE);
+glm::vec4 *colours = new glm::vec4[INITIAL_FLOCK_SIZE];
 
 float genRandomFloat();
 
@@ -102,23 +102,25 @@ int main(void)
 
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // GL_LINE or GL_FILL
 
+	// For vertex buffer
 	float vertices[] = {
 		// positions          // texture coords
 		 0.5f,  0.0f, 0.0f,   1.0f, 1.0f, // right
 		-0.5f, -0.3f, 0.0f,   1.0f, 0.0f, // bottom left
 		-0.5f,  0.3f, 0.0f,   0.0f, 0.0f, // top left
 	};
+
+	// For index buffer
 	unsigned int indices[] = {
 		0, 1, 2, // first triangle
 		//1, 2, 3  // second triangle
 	};
 
+	// For instance matrix buffer
+	glm::mat4 *translations = new glm::mat4[INITIAL_FLOCK_SIZE];
 
-	for (int i = 0; i < flock.getFlockSize(); i++) {
+	// For instance colour buffer
 
-		// transformation matrix
-		//flock.boids[i].getTransMatrix(translations[i]);
-	}
 
 	// Vertex Array Object
 	unsigned int VAO;		// Buffer that stores whatever is bound
@@ -150,7 +152,6 @@ int main(void)
 	GLCall(glGenBuffers(1, &instanceMatricesVBO));
 	GLCall(glBindBuffer(GL_ARRAY_BUFFER, instanceMatricesVBO));
 	GLCall(glBufferData(GL_ARRAY_BUFFER, INITIAL_FLOCK_SIZE * sizeof(glm::mat4), &translations[0], GL_DYNAMIC_DRAW));
-	//GLCall(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
 	GLsizei vec4Size = sizeof(glm::vec4);
 	GLCall(glEnableVertexAttribArray(2));
@@ -166,13 +167,18 @@ int main(void)
 	glVertexAttribDivisor(3, 1);
 	glVertexAttribDivisor(4, 1);
 	glVertexAttribDivisor(5, 1);
-	glBindVertexArray(0);
 
-	/*unsigned int instanceColoursVBO;
-	GLCall(glGenBuffers(1, &instanceColoursVBO));
-	GLCall(glBindBuffer(GL_ARRAY_BUFFER, instanceColoursVBO));*/
-	//GLCall(glBufferData(GL_ARRAY_BUFFER, INITIAL_FLOCK_SIZE * sizeof(glm::mat4), &colours[0], GL_DYNAMIC_DRAW));
-	//GLCall(glBindBuffer(GL_ARRAY_BUFFER, 0));
+	unsigned int instanceColourVBO;
+	GLCall(glGenBuffers(1, &instanceColourVBO));
+	GLCall(glBindBuffer(GL_ARRAY_BUFFER, instanceColourVBO));
+	GLCall(glBufferData(GL_ARRAY_BUFFER, INITIAL_FLOCK_SIZE * sizeof(glm::mat4), &colours[0], GL_DYNAMIC_DRAW));
+
+	GLCall(glEnableVertexAttribArray(6));
+	GLCall(glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(glm::vec4), (void*)0));
+
+	glVertexAttribDivisor(6, 1);
+
+	glBindVertexArray(0);
 
 	// 2. use our shader program when we want to render an object
 	TriangleShader.use();
@@ -182,7 +188,9 @@ int main(void)
 	float deltaTime = 0.0f;
 	float lastFrame = 0.0f;
 
-	int flockSize = flock.getFlockSize();
+	/* 1 Time Logic */
+
+	colours = flock.getColours();
 
 	glBindVertexArray(VAO);
 
@@ -195,8 +203,8 @@ int main(void)
 		if (currentTime - lastTime >= 1.0) { // If last prinf() was more than 1 sec ago
 			// printf and reset timer
 			printf("%f ms/frame\n", 1000.0 / double(nbFrames));
-			printf("%i boids\n", flockSize);
-			//flock.addBoid();
+			printf("%i boids\n", flock.getFlockSize());
+
 			nbFrames = 0;
 			lastTime += 1.0;
 		}
@@ -207,19 +215,21 @@ int main(void)
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 
-		flock.moveFlock();
-
-		translations = flock.getTranslations();
-
 
 		// Input
 		processInput(window);
 
 		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
 			flock.addBoid(0.0f, 0.0f, 0.01f, glm::vec4(genRandomFloat(), genRandomFloat(), genRandomFloat(), 1.0f));
-
+			colours = flock.getColours();
 			printf("Flocksize %i\n", flock.getFlockSize());
 		}
+
+
+		// Logic
+		flock.moveFlock(); // Move all of the flock objects
+
+		translations = flock.getTranslations(); // Calculate translation matrices for every boid object
 
 
 		/* Render here */
@@ -228,9 +238,13 @@ int main(void)
 
 		TriangleShaderInstanced.use();
 		
-		TriangleShaderInstanced.setVec4("colour", glm::vec4(1.0f, 0.5f, 0.1f, 1.0f));
+		//TriangleShaderInstanced.setVec4("colour", glm::vec4(1.0f, 0.5f, 0.1f, 1.0f));
 
+		GLCall(glBindBuffer(GL_ARRAY_BUFFER, instanceMatricesVBO));
 		GLCall(glBufferData(GL_ARRAY_BUFFER, flock.getFlockSize() * sizeof(glm::mat4), &translations[0], GL_DYNAMIC_DRAW));
+
+		GLCall(glBindBuffer(GL_ARRAY_BUFFER, instanceColourVBO));
+		GLCall(glBufferData(GL_ARRAY_BUFFER, flock.getFlockSize() * sizeof(glm::vec4), &colours[0], GL_DYNAMIC_DRAW));
 
 
 		// Render triangle
@@ -248,6 +262,9 @@ int main(void)
 	glDeleteBuffers(1, &VBO);
 	glDeleteBuffers(1, &EBO);
 
+	// My de-allocations
+	delete(translations);
+	delete(colours);
 
 	// glfw: terminate, clearing all previously allocated GLFW resources.
 	// ------------------------------------------------------------------
@@ -282,6 +299,6 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 		glfwGetCursorPos(window, &xPos, &yPos);
 		//printf("Left mouse button pressed at %f %f\n", xPos/SCR_WIDTH, yPos/SCR_HEIGHT);
 		flock.addBoid((xPos / SCR_WIDTH)*2 -1, ((yPos / SCR_HEIGHT)*2 -1) * -1, 0.01f, glm::vec4(genRandomFloat(), genRandomFloat(), genRandomFloat(), 1.0f));
-		translations = new glm::mat4[flock.getFlockSize()];
+		colours = flock.getColours();
 	}
 }
