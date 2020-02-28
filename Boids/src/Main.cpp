@@ -45,7 +45,7 @@ unsigned int SCR_HEIGHT = 600;
 
 double xPos, yPos;
 
-const static int INITIAL_FLOCK_SIZE = 100;
+const static int INITIAL_FLOCK_SIZE = 700;
 glm::mat4 *translations = new glm::mat4[INITIAL_FLOCK_SIZE];
 
 Flock flock(INITIAL_FLOCK_SIZE);
@@ -146,9 +146,9 @@ int main(void)
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(2* sizeof(float)));
 
-	unsigned int instanceVBO;
-	GLCall(glGenBuffers(1, &instanceVBO));
-	GLCall(glBindBuffer(GL_ARRAY_BUFFER, instanceVBO));
+	unsigned int instanceMatricesVBO;
+	GLCall(glGenBuffers(1, &instanceMatricesVBO));
+	GLCall(glBindBuffer(GL_ARRAY_BUFFER, instanceMatricesVBO));
 	GLCall(glBufferData(GL_ARRAY_BUFFER, INITIAL_FLOCK_SIZE * sizeof(glm::mat4), &translations[0], GL_DYNAMIC_DRAW));
 	//GLCall(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
@@ -166,8 +166,13 @@ int main(void)
 	glVertexAttribDivisor(3, 1);
 	glVertexAttribDivisor(4, 1);
 	glVertexAttribDivisor(5, 1);
-
 	glBindVertexArray(0);
+
+	/*unsigned int instanceColoursVBO;
+	GLCall(glGenBuffers(1, &instanceColoursVBO));
+	GLCall(glBindBuffer(GL_ARRAY_BUFFER, instanceColoursVBO));*/
+	//GLCall(glBufferData(GL_ARRAY_BUFFER, INITIAL_FLOCK_SIZE * sizeof(glm::mat4), &colours[0], GL_DYNAMIC_DRAW));
+	//GLCall(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
 	// 2. use our shader program when we want to render an object
 	TriangleShader.use();
@@ -204,63 +209,33 @@ int main(void)
 
 		flock.moveFlock();
 
-		flockSize = flock.getFlockSize();
+		translations = flock.getTranslations();
+
 
 		// Input
 		processInput(window);
 
 		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
 			flock.addBoid(0.0f, 0.0f, 0.01f, glm::vec4(genRandomFloat(), genRandomFloat(), genRandomFloat(), 1.0f));
-			flockSize = flock.getFlockSize();
-			printf("Flocksize %i\n", flockSize);
-			translations = new glm::mat4[flockSize];
+
+			printf("Flocksize %i\n", flock.getFlockSize());
 		}
+
 
 		/* Render here */
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		//// Use Shader
-		//TriangleShader.use();
-
-		//// Normal
-		//for (int i = 0; i < flockSize; i++) {
-
-		//	// transformation matrix
-		//	flock.boids[i].getTransMatrix(translations[i]);
-
-		//	// Set uniforms
-		//	TriangleShader.setMat4("transform", translations[i]);
-		//	TriangleShader.setVec4("colour", flock.boids[i].colour);
-
-		//	// Render triangle
-		//	glBindVertexArray(VAO);
-		//	glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
-		//}
-
-		//glm::mat4 *x = new glm::mat4[flockSize];
-
-		translations = new glm::mat4[flockSize];
-		
 		TriangleShaderInstanced.use();
 		
 		TriangleShaderInstanced.setVec4("colour", glm::vec4(1.0f, 0.5f, 0.1f, 1.0f));
 
-		// Instanced
-		for (int i = 0; i < flockSize; i++) {
+		GLCall(glBufferData(GL_ARRAY_BUFFER, flock.getFlockSize() * sizeof(glm::mat4), &translations[0], GL_DYNAMIC_DRAW));
 
-			// transformation matrix
-			flock.boids[i].getTransMatrix(translations[i]);
 
-		}
-
-		/*glBindVertexArray(VAO);*/
-
-		GLCall(glBufferData(GL_ARRAY_BUFFER, flockSize * sizeof(glm::mat4), &translations[0], GL_DYNAMIC_DRAW));
-
-			// Render triangle
-		glDrawArraysInstanced(GL_TRIANGLES, 0, 3, flockSize);
-		//glDrawElementsInstanced(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0, flockSize);
+		// Render triangle
+		glDrawArraysInstanced(GL_TRIANGLES, 0, 3, flock.getFlockSize());
+		////glDrawElementsInstanced(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0, flockSize);
 
 
 		// check and call events and swap the buffers

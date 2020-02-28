@@ -11,6 +11,7 @@ float genRandomFloat() {
 Flock::Flock(const int flockSize)
 {
 	boids.reserve(flockSize+100);
+	translations = new glm::mat4[flockSize];
 
 	for (int i = 0; i < flockSize; i++) {
 		boids.emplace_back(genRandomFloat(), genRandomFloat(),
@@ -32,8 +33,16 @@ void Flock::addBoid(float x, float y, float maxSpeed, glm::vec4 colour) {
 	for (int i = 0; i < getFlockSize(); i++) {
 		boids[i].setFlockMates(&boids);
 	}
+	translations = new glm::mat4[getFlockSize()];
 }
 
 int Flock::getFlockSize() {
 	return boids.size();
+}
+
+glm::mat4* Flock::getTranslations() {
+	for (int i = 0; i < getFlockSize(); i++) {
+		boids[i].getTransMatrix(translations[i]);
+	}
+	return translations;
 }
