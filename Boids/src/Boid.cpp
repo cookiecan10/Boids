@@ -93,8 +93,10 @@ glm::vec3 Boid::separation() {
 glm::vec3 Boid::cohesion() {
 	auto averagePos = glm::vec3(0.0f, 0.0f, 0.0f);
 
+	const float careDistance = 0.5f;
+
 	for (int i = 0; i < flockMates->size(); i++) {
-		if (glm::length(position - (*flockMates)[i].position) < 0.5f) {
+		if (glm::length(position - (*flockMates)[i].position) < careDistance) {
 			averagePos += (*flockMates)[i].position;
 		}
 	}
@@ -104,9 +106,12 @@ glm::vec3 Boid::cohesion() {
 
 glm::vec3 Boid::alignment() {
 	auto averageAlignment = glm::vec3(0.0f, 0.0f, 0.0f);
+
+	const float careDistance = 0.5f;
+
 	int count = 0;
 	for (int i = 0; i < flockMates->size(); i++) {
-		if (glm::length(position - (*flockMates)[i].position) < 0.5f) {
+		if (glm::length(position - (*flockMates)[i].position) < careDistance) {
 			averageAlignment += (*flockMates)[i].velocity;
 			count++;
 		}

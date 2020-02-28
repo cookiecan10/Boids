@@ -32,7 +32,6 @@ void Flock::addBoid(float x, float y, float maxSpeed, glm::vec4 colour) {
 	for (int i = 0; i < getFlockSize(); i++) {
 		boids[i].setFlockMates(&boids);
 	}
-	//numOfBoids++;
 }
 
 int Flock::getFlockSize() {

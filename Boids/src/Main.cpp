@@ -12,6 +12,28 @@
 #include "Flock.h"
 #include <string>
 
+#define ASSERT(x) if (!(x)) __debugbreak(); //Sets a breakpoint at that line of code
+#define GLCall(x) GLClearError();\
+	x;\
+	ASSERT(GLLogCall(#x, __FILE__, __LINE__))
+
+//Clears all of the errors left in OpenGL
+void GLClearError()
+{
+	while (glGetError() != GL_NO_ERROR);
+}
+
+//Prints an error message to the console
+bool GLLogCall(const char* function, const char* file, int line)
+{
+	while (GLenum error = glGetError())
+	{
+		std::cout << "[OpenGL Error] (" << error << "): " << function << " " << file << ":" << line << std::endl;
+		return false;
+	}
+	return true;
+}
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 //void mouse_cursorPos_callback(GLFWwindow* window, double xpos, double ypos);
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
@@ -23,7 +45,10 @@ unsigned int SCR_HEIGHT = 600;
 
 double xPos, yPos;
 
-Flock flock(10);
+const static int INITIAL_FLOCK_SIZE = 100;
+glm::mat4 *translations = new glm::mat4[INITIAL_FLOCK_SIZE];
+
+Flock flock(INITIAL_FLOCK_SIZE);
 
 float genRandomFloat();
 
@@ -88,6 +113,13 @@ int main(void)
 		//1, 2, 3  // second triangle
 	};
 
+
+	for (int i = 0; i < flock.getFlockSize(); i++) {
+
+		// transformation matrix
+		//flock.boids[i].getTransMatrix(translations[i]);
+	}
+
 	// Vertex Array Object
 	unsigned int VAO;		// Buffer that stores whatever is bound
 	glGenVertexArrays(1, &VAO);
@@ -108,11 +140,35 @@ int main(void)
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
 	// 1. then set the vertex attributes pointers
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
 
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(2* sizeof(float)));
 	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(2* sizeof(float)));
+
+	unsigned int instanceVBO;
+	GLCall(glGenBuffers(1, &instanceVBO));
+	GLCall(glBindBuffer(GL_ARRAY_BUFFER, instanceVBO));
+	GLCall(glBufferData(GL_ARRAY_BUFFER, INITIAL_FLOCK_SIZE * sizeof(glm::mat4), &translations[0], GL_DYNAMIC_DRAW));
+	//GLCall(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+	GLsizei vec4Size = sizeof(glm::vec4);
+	GLCall(glEnableVertexAttribArray(2));
+	GLCall(glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void*)0));
+	GLCall(glEnableVertexAttribArray(3));
+	GLCall(glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void*)(vec4Size)));
+	GLCall(glEnableVertexAttribArray(4));
+	GLCall(glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void*)(2 * vec4Size)));
+	GLCall(glEnableVertexAttribArray(5));
+	GLCall(glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void*)(3 * vec4Size)));
+
+	glVertexAttribDivisor(2, 1);
+	glVertexAttribDivisor(3, 1);
+	glVertexAttribDivisor(4, 1);
+	glVertexAttribDivisor(5, 1);
+
+	glBindVertexArray(0);
+
 	// 2. use our shader program when we want to render an object
 	TriangleShader.use();
 
@@ -121,9 +177,9 @@ int main(void)
 	float deltaTime = 0.0f;
 	float lastFrame = 0.0f;
 
-	int flockSize;
+	int flockSize = flock.getFlockSize();
 
-	glm::mat4 translations[10000];
+	glBindVertexArray(VAO);
 
 	/* Render Loop */
 	while (!glfwWindowShouldClose(window))
@@ -147,6 +203,7 @@ int main(void)
 		lastFrame = currentFrame;
 
 		flock.moveFlock();
+
 		flockSize = flock.getFlockSize();
 
 		// Input
@@ -154,50 +211,57 @@ int main(void)
 
 		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
 			flock.addBoid(0.0f, 0.0f, 0.01f, glm::vec4(genRandomFloat(), genRandomFloat(), genRandomFloat(), 1.0f));
-			printf("Flocksize %i\n", flock.getFlockSize());
+			flockSize = flock.getFlockSize();
+			printf("Flocksize %i\n", flockSize);
+			translations = new glm::mat4[flockSize];
 		}
 
 		/* Render here */
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		// Use Shader
-		TriangleShader.use();
+		//// Use Shader
+		//TriangleShader.use();
 
-		// Normal
-		for (int i = 0; i < flockSize; i++) {
-
-			// transformation matrix
-			flock.boids[i].getTransMatrix(translations[i]);
-
-			// Set uniforms
-			TriangleShader.setMat4("transform", translations[i]);
-			TriangleShader.setVec4("colour", flock.boids[i].colour);
-
-			// Render triangle
-			glBindVertexArray(VAO);
-			glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
-		}
-
-
-		// TriangleShaderInstanced.use();
-		//
-		//// Instanced
+		//// Normal
 		//for (int i = 0; i < flockSize; i++) {
 
 		//	// transformation matrix
 		//	flock.boids[i].getTransMatrix(translations[i]);
 
-		//	// Set Uniforms
-		//	std::stringstream ss;
-		//	std::string index;
-		//	ss << i;
-		//	index = ss.str();
-		//	TriangleShaderInstanced.setMat4(("transforms[" + index + "]").c_str(), translations[i]);
+		//	// Set uniforms
+		//	TriangleShader.setMat4("transform", translations[i]);
+		//	TriangleShader.setVec4("colour", flock.boids[i].colour);
 
 		//	// Render triangle
+		//	glBindVertexArray(VAO);
+		//	glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
 		//}
+
+		//glm::mat4 *x = new glm::mat4[flockSize];
+
+		translations = new glm::mat4[flockSize];
+		
+		TriangleShaderInstanced.use();
+		
+		TriangleShaderInstanced.setVec4("colour", glm::vec4(1.0f, 0.5f, 0.1f, 1.0f));
+
+		// Instanced
+		for (int i = 0; i < flockSize; i++) {
+
+			// transformation matrix
+			flock.boids[i].getTransMatrix(translations[i]);
+
+		}
+
+		/*glBindVertexArray(VAO);*/
+
+		GLCall(glBufferData(GL_ARRAY_BUFFER, flockSize * sizeof(glm::mat4), &translations[0], GL_DYNAMIC_DRAW));
+
+			// Render triangle
+		glDrawArraysInstanced(GL_TRIANGLES, 0, 3, flockSize);
 		//glDrawElementsInstanced(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0, flockSize);
+
 
 		// check and call events and swap the buffers
 		glfwPollEvents();			/* Swap front and back buffers */
@@ -243,5 +307,6 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 		glfwGetCursorPos(window, &xPos, &yPos);
 		//printf("Left mouse button pressed at %f %f\n", xPos/SCR_WIDTH, yPos/SCR_HEIGHT);
 		flock.addBoid((xPos / SCR_WIDTH)*2 -1, ((yPos / SCR_HEIGHT)*2 -1) * -1, 0.01f, glm::vec4(genRandomFloat(), genRandomFloat(), genRandomFloat(), 1.0f));
+		translations = new glm::mat4[flock.getFlockSize()];
 	}
 }
