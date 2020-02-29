@@ -47,10 +47,9 @@ double xPos, yPos;
 
 const static int INITIAL_FLOCK_SIZE = 1;
 
-Flock flock(INITIAL_FLOCK_SIZE);
-//glm::vec4 *colours = new glm::vec4[INITIAL_FLOCK_SIZE];
-
 std::vector<glm::vec4> colours;
+
+Flock flock(INITIAL_FLOCK_SIZE);
 
 float genRandomFloat();
 
@@ -154,7 +153,7 @@ int main(void)
 	unsigned int instanceMatricesVBO;
 	GLCall(glGenBuffers(1, &instanceMatricesVBO));
 	GLCall(glBindBuffer(GL_ARRAY_BUFFER, instanceMatricesVBO));
-	GLCall(glBufferData(GL_ARRAY_BUFFER, INITIAL_FLOCK_SIZE * sizeof(glm::mat4), &translations[0], GL_DYNAMIC_DRAW));
+	GLCall(glBufferData(GL_ARRAY_BUFFER, flock.getFlockSize() * sizeof(glm::mat4), &translations[0], GL_DYNAMIC_DRAW));
 
 	GLsizei vec4Size = sizeof(glm::vec4);
 	GLCall(glEnableVertexAttribArray(2));
@@ -174,7 +173,7 @@ int main(void)
 	unsigned int instanceColourVBO;
 	GLCall(glGenBuffers(1, &instanceColourVBO));
 	GLCall(glBindBuffer(GL_ARRAY_BUFFER, instanceColourVBO));
-	GLCall(glBufferData(GL_ARRAY_BUFFER, INITIAL_FLOCK_SIZE * sizeof(glm::mat4), &colours.front(), GL_DYNAMIC_DRAW));
+	GLCall(glBufferData(GL_ARRAY_BUFFER, (flock.RESERVE_SIZE + flock.getFlockSize()) * sizeof(glm::vec4), NULL, GL_STATIC_DRAW));
 
 	GLCall(glEnableVertexAttribArray(6));
 	GLCall(glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(glm::vec4), (void*)0));
@@ -193,9 +192,15 @@ int main(void)
 
 	/* 1 Time Logic */
 
-	colours = flock.getColours();
+	bool pause = false;
 
 	glBindVertexArray(VAO);
+
+	GLCall(glBindBuffer(GL_ARRAY_BUFFER, instanceColourVBO));
+	glBufferSubData(GL_ARRAY_BUFFER, 0, colours.size() * sizeof(glm::vec4), &colours.front());
+
+	// Send whole buffer
+	//GLCall(glBufferData(GL_ARRAY_BUFFER, flock.getFlockSize() * sizeof(glm::vec4), &colours[0], GL_STREAM_DRAW));
 
 	/* Render Loop */
 	while (!glfwWindowShouldClose(window))
@@ -223,16 +228,40 @@ int main(void)
 		processInput(window);
 
 		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
-			flock.addBoid(0.0f, 0.0f, 0.01f, glm::vec4(genRandomFloat(), genRandomFloat(), genRandomFloat(), 1.0f));
-			colours = flock.getColours();
 			printf("Flocksize %i\n", flock.getFlockSize());
+			printf("ReserveLeft %i\n", flock.reserveLeft);
+			
+			flock.addBoid(0.0f, 0.0f, 0.01f, glm::vec4(genRandomFloat(), genRandomFloat(), genRandomFloat(), 1.0f));
+
+			translations = flock.getTranslations(); // Calculate translation matrices for every boid object
+			colours = flock.getColours();			// Get the colours for every boid object
+			
+			GLCall(glBindBuffer(GL_ARRAY_BUFFER, instanceColourVBO));
+			if (flock.reserveLeft <= 0) {
+				// This has a bug, do not use this reserve!!!!!!!!!!!!!
+				// This has a bug, do not use this reserve!!!!!!!!!!!!!
+				GLCall(glBufferData(GL_ARRAY_BUFFER, (flock.RESERVE_SIZE + colours.size()) * sizeof(glm::vec4), &colours.front(), GL_STATIC_DRAW));
+				flock.resetReserve();
+      			printf("Reserve has been refilled\n", flock.reserveLeft);
+			} else {
+				glBufferSubData(GL_ARRAY_BUFFER, (colours.size()-1) * sizeof(glm::vec4), sizeof(glm::vec4), &colours.back());
+			}
+
 		}
 
+		if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) {
+			pause = true;
+		}
+		else {
+			pause = false;
+		}
 
 		// Logic
-		flock.moveFlock(); // Move all of the flock objects
 
-		translations = flock.getTranslations(); // Calculate translation matrices for every boid object
+		if (!pause) {
+			flock.moveFlock(); // Move all of the flock objects
+			translations = flock.getTranslations(); // Calculate translation matrices for every boid object
+		}
 
 
 		/* Render here */
@@ -244,10 +273,7 @@ int main(void)
 		//TriangleShaderInstanced.setVec4("colour", glm::vec4(1.0f, 0.5f, 0.1f, 1.0f));
 
 		GLCall(glBindBuffer(GL_ARRAY_BUFFER, instanceMatricesVBO));
-		GLCall(glBufferData(GL_ARRAY_BUFFER, flock.getFlockSize() * sizeof(glm::mat4), &translations[0], GL_DYNAMIC_DRAW));
-
-		GLCall(glBindBuffer(GL_ARRAY_BUFFER, instanceColourVBO));
-		GLCall(glBufferData(GL_ARRAY_BUFFER, flock.getFlockSize() * sizeof(glm::vec4), &colours.front(), GL_DYNAMIC_DRAW));
+		GLCall(glBufferData(GL_ARRAY_BUFFER, flock.getFlockSize() * sizeof(glm::mat4), &translations[0], GL_STREAM_DRAW));
 
 
 		// Render triangle
@@ -266,8 +292,7 @@ int main(void)
 	glDeleteBuffers(1, &EBO);
 
 	// My de-allocations
-	//delete[] translations;
-	//delete[] colours;
+
 
 	// glfw: terminate, clearing all previously allocated GLFW resources.
 	// ------------------------------------------------------------------

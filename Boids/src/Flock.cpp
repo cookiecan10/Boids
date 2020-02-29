@@ -34,6 +34,7 @@ void Flock::addBoid(float x, float y, float maxSpeed, glm::vec4 colour) {
 		boids[i].setFlockMates(&boids);
 	}
 	translations.emplace_back(boids[boids.size()-1].getTransMatrix());
+	reserveLeft -= 1;
 }
 
 int Flock::getFlockSize() {
@@ -51,9 +52,13 @@ std::vector<glm::mat4> Flock::getTranslations() {
 
 std::vector<glm::vec4> Flock::getColours() {
 	std::vector<glm::vec4> colours;
-	colours.reserve(getFlockSize());
+	colours.reserve(boids.size());
 	for (int i = 0; i < getFlockSize(); i++) {
 		colours.push_back(boids[i].colour);
 	}
 	return colours;
+}
+
+void Flock::resetReserve() {
+	reserveLeft = RESERVE_SIZE;
 }

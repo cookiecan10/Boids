@@ -11,7 +11,7 @@ float genRandF() {
 }
 
 Boid::Boid(float x, float y, float angle, float maxSpeed, glm::vec4 colour)
-	: angle(angle), maxSpeed(maxSpeed), colour(colour)
+	: angle(angle), maxSpeed(maxSpeed), colour(colour) //colour(glm::vec4(1.0f, 0.5f, 0.3f, 1.0f))
 {
 	position.x = x;
 	position.y = y;
