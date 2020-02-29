@@ -5,7 +5,7 @@
 
 class Flock {
 public:
-	int RESERVE_SIZE = 20000;
+	int RESERVE_SIZE = 200;
 	int reserveLeft = RESERVE_SIZE;
 	std::vector<Boid> boids;
 	std::vector<glm::mat4> translations;

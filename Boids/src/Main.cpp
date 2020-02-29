@@ -109,6 +109,14 @@ int main(void)
 		 0.5f,  0.0f, 0.0f,   1.0f, 1.0f, // right
 		-0.5f, -0.3f, 0.0f,   1.0f, 0.0f, // bottom left
 		-0.5f,  0.3f, 0.0f,   0.0f, 0.0f, // top left
+
+		//-0.1f,  0.4f, 0.0f,   1.0f, 1.0f, // top left
+		//-0.1f, -0.4f, 0.0f,   1.0f, 0.0f, // bottom left
+		// 0.1f, -0.4f, 0.0f,   0.0f, 0.0f, // top right
+
+		//-0.1f,  0.4f, 0.0f,   1.0f, 1.0f,  // top left
+		// 0.1f,  0.4f, 0.0f,   0.0f, 0.0f,  // top right
+		// 0.1f, -0.4f, 0.0f,   1.0f, 0.0f,  // bottom right
 	};
 
 	// For index buffer
@@ -229,7 +237,7 @@ int main(void)
 
 		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
 			printf("Flocksize %i\n", flock.getFlockSize());
-			printf("ReserveLeft %i\n", flock.reserveLeft);
+			//printf("ReserveLeft %i\n", flock.reserveLeft);
 			
 			flock.addBoid(0.0f, 0.0f, 0.01f, glm::vec4(genRandomFloat(), genRandomFloat(), genRandomFloat(), 1.0f));
 
@@ -238,9 +246,8 @@ int main(void)
 			
 			GLCall(glBindBuffer(GL_ARRAY_BUFFER, instanceColourVBO));
 			if (flock.reserveLeft <= 0) {
-				// This has a bug, do not use this reserve!!!!!!!!!!!!!
-				// This has a bug, do not use this reserve!!!!!!!!!!!!!
-				GLCall(glBufferData(GL_ARRAY_BUFFER, (flock.RESERVE_SIZE + colours.size()) * sizeof(glm::vec4), &colours.front(), GL_STATIC_DRAW));
+				GLCall(glBufferData(GL_ARRAY_BUFFER, ( flock.RESERVE_SIZE + colours.size()) * sizeof(glm::vec4), NULL, GL_STATIC_DRAW));
+				GLCall(glBufferSubData(GL_ARRAY_BUFFER, 0, colours.size() * sizeof(glm::vec4), &colours[0]));
 				flock.resetReserve();
       			printf("Reserve has been refilled\n", flock.reserveLeft);
 			} else {
@@ -327,6 +334,6 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 		glfwGetCursorPos(window, &xPos, &yPos);
 		//printf("Left mouse button pressed at %f %f\n", xPos/SCR_WIDTH, yPos/SCR_HEIGHT);
 		flock.addBoid((xPos / SCR_WIDTH)*2 -1, ((yPos / SCR_HEIGHT)*2 -1) * -1, 0.01f, glm::vec4(genRandomFloat(), genRandomFloat(), genRandomFloat(), 1.0f));
-		colours = flock.getColours();
+		//colours = flock.getColours();
 	}
 }
