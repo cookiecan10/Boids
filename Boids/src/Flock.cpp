@@ -19,6 +19,8 @@ Flock::Flock(const int flockSize)
 			glm::vec4(genRandomFloat(), genRandomFloat(), genRandomFloat(), 1.0f));
 
 		boids[i].setFlockMates(&boids);
+		boids[i].interestPoint = &interestPoint;
+		boids[i].interested = &interested;
 	}
 }
 
@@ -32,7 +34,10 @@ void Flock::addBoid(float x, float y, float maxSpeed, glm::vec4 colour) {
 	boids.emplace_back(Boid(x, y, genRandomFloat() * 2 * 3.1415, maxSpeed, colour));
 	for (int i = 0; i < getFlockSize(); i++) {
 		boids[i].setFlockMates(&boids);
+		boids[i].interestPoint = &interestPoint;
+		boids[i].interested = &interested;
 	}
+
 	translations.emplace_back(boids[boids.size()-1].getTransMatrix());
 	reserveLeft -= 1;
 }
@@ -61,4 +66,14 @@ std::vector<glm::vec4> Flock::getColours() {
 
 void Flock::resetReserve() {
 	reserveLeft = RESERVE_SIZE;
+}
+
+void Flock::removeBoid() {
+	if (getFlockSize() >=1) {
+		boids.pop_back();
+	}
+}
+
+void Flock::toggleInterested() {
+	interested = !interested;
 }

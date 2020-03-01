@@ -8,6 +8,7 @@ private:
 	glm::vec3 separation();
 	glm::vec3 cohesion();
 	glm::vec3 alignment();
+	glm::vec3 interest();
 	void clampVec(glm::vec3&, float c);
 public:
 	float angle;
@@ -16,6 +17,9 @@ public:
 	glm::vec3 velocity;
 	glm::vec3 accelation;
 	glm::vec4 colour;
+
+	bool* interested;
+	glm::vec3* interestPoint;
 
 	std::vector<Boid> *flockMates;
 

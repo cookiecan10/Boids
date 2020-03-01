@@ -47,6 +47,11 @@ void Boid::move() {
 	velocity += alignment() * 0.05f;
 	clampVec(velocity, maxSpeed);
 
+	if ((*interested)) {
+		velocity += interest() * 0.0003f;
+		clampVec(velocity, maxSpeed);
+	}
+
 	position += velocity;
 
 	if (position.x > 1.1f) {
@@ -121,6 +126,10 @@ glm::vec3 Boid::alignment() {
 	}
 	averageAlignment /= count;
 	return averageAlignment;
+}
+
+glm::vec3 Boid::interest() {
+	return (*interestPoint) - position;
 }
 
 void Boid::setFlockMates(std::vector<Boid>* flock) {

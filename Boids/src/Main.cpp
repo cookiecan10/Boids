@@ -246,14 +246,18 @@ int main(void)
 			
 			GLCall(glBindBuffer(GL_ARRAY_BUFFER, instanceColourVBO));
 			if (flock.reserveLeft <= 0) {
-				GLCall(glBufferData(GL_ARRAY_BUFFER, ( flock.RESERVE_SIZE + colours.size()) * sizeof(glm::vec4), NULL, GL_STATIC_DRAW));
-				GLCall(glBufferSubData(GL_ARRAY_BUFFER, 0, colours.size() * sizeof(glm::vec4), &colours[0]));
+				GLCall(glBufferData(GL_ARRAY_BUFFER, ( flock.RESERVE_SIZE + flock.getFlockSize()) * sizeof(glm::vec4), NULL, GL_STATIC_DRAW));
+				GLCall(glBufferSubData(GL_ARRAY_BUFFER, 0, flock.getFlockSize() * sizeof(glm::vec4), &colours[0]));
 				flock.resetReserve();
       			printf("Reserve has been refilled\n", flock.reserveLeft);
 			} else {
-				glBufferSubData(GL_ARRAY_BUFFER, (colours.size()-1) * sizeof(glm::vec4), sizeof(glm::vec4), &colours.back());
+				glBufferSubData(GL_ARRAY_BUFFER, (flock.getFlockSize()-1) * sizeof(glm::vec4), sizeof(glm::vec4), &colours.back());
 			}
+		}
 
+		if (glfwGetKey(window, GLFW_KEY_BACKSPACE) == GLFW_PRESS) {
+			flock.removeBoid();
+			translations = flock.getTranslations();
 		}
 
 		if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) {
@@ -279,8 +283,11 @@ int main(void)
 		
 		//TriangleShaderInstanced.setVec4("colour", glm::vec4(1.0f, 0.5f, 0.1f, 1.0f));
 
-		GLCall(glBindBuffer(GL_ARRAY_BUFFER, instanceMatricesVBO));
-		GLCall(glBufferData(GL_ARRAY_BUFFER, flock.getFlockSize() * sizeof(glm::mat4), &translations[0], GL_STREAM_DRAW));
+		if (flock.getFlockSize()) {
+			GLCall(glBindBuffer(GL_ARRAY_BUFFER, instanceMatricesVBO));
+			GLCall(glBufferData(GL_ARRAY_BUFFER, flock.getFlockSize() * sizeof(glm::mat4), &translations[0], GL_STREAM_DRAW));
+
+		}
 
 
 		// Render triangle
@@ -335,5 +342,10 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 		//printf("Left mouse button pressed at %f %f\n", xPos/SCR_WIDTH, yPos/SCR_HEIGHT);
 		flock.addBoid((xPos / SCR_WIDTH)*2 -1, ((yPos / SCR_HEIGHT)*2 -1) * -1, 0.01f, glm::vec4(genRandomFloat(), genRandomFloat(), genRandomFloat(), 1.0f));
 		//colours = flock.getColours();
+	}
+	if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
+		glfwGetCursorPos(window, &xPos, &yPos);
+		flock.interestPoint = glm::vec3((xPos / SCR_WIDTH) * 2 - 1, ((yPos / SCR_HEIGHT) * 2 - 1) * -1, 0.0f);
+		flock.toggleInterested();
 	}
 }
