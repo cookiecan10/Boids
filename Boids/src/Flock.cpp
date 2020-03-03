@@ -21,12 +21,13 @@ Flock::Flock(const int flockSize)
 		boids[i].setFlockMates(&boids);
 		boids[i].interestPoint = &interestPoint;
 		boids[i].interested = &interested;
+		boids[i].timeModifier = timeModifier;
 	}
 }
 
-void Flock::moveFlock() {
+void Flock::moveFlock(float &deltaTime) {
 	for (int i = 0; i < getFlockSize(); i++) {
-		boids[i].move();
+		boids[i].move(deltaTime);
 	}
 }
 
@@ -36,6 +37,7 @@ void Flock::addBoid(float x, float y, float maxSpeed, glm::vec4 colour) {
 		boids[i].setFlockMates(&boids);
 		boids[i].interestPoint = &interestPoint;
 		boids[i].interested = &interested;
+		boids[i].timeModifier = timeModifier;
 	}
 
 	translations.emplace_back(boids[boids.size()-1].getTransMatrix());
@@ -76,4 +78,11 @@ void Flock::removeBoid() {
 
 void Flock::toggleInterested() {
 	interested = !interested;
+}
+
+void Flock::changeTimeModifier(float amount) {
+	timeModifier += amount;
+	for (int i = 0; i < getFlockSize(); i++) {
+		boids[i].changeTimeModifier(amount);
+	}
 }

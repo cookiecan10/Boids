@@ -33,7 +33,7 @@ Boid::Boid(){
 	colour = glm::vec4(1.0f, 0.5f, 0.3f, 1.0f);
 }
 
-void Boid::move() {
+void Boid::move(float &deltaTime) {
 
 	//velocity.x = speed * cos(angle);
 	//velocity.y = speed * sin(angle);
@@ -52,7 +52,7 @@ void Boid::move() {
 		clampVec(velocity, maxSpeed);
 	}
 
-	position += velocity;
+	position += velocity * deltaTime * timeModifier;
 
 	if (position.x > 1.1f) {
 		position.x = -1.0f;
@@ -148,4 +148,8 @@ void Boid::clampVec(glm::vec3 &vec, float clampLength = 0.01f) {
 	if (glm::length(vec) > 0.01f) {
 		vec = glm::normalize(vec) * clampLength;
 	}
+}
+
+void Boid::changeTimeModifier(float amount) {
+	timeModifier += amount;
 }

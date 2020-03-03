@@ -267,10 +267,16 @@ int main(void)
 			pause = false;
 		}
 
-		// Logic
+		if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+			flock.changeTimeModifier(2.0f);
+		} 
+		if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+			flock.changeTimeModifier(-2.0f);
+		}
 
+		// Logic
 		if (!pause) {
-			flock.moveFlock(); // Move all of the flock objects
+			flock.moveFlock(deltaTime); // Move all of the flock objects
 			translations = flock.getTranslations(); // Calculate translation matrices for every boid object
 		}
 

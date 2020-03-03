@@ -13,6 +13,7 @@ private:
 public:
 	float angle;
 	float maxSpeed;
+	float timeModifier = 70.0f;
 	glm::vec3 position;
 	glm::vec3 velocity;
 	glm::vec3 accelation;
@@ -26,10 +27,11 @@ public:
 	Boid(float xPos, float yPos, float angle = 0.0f, float maxSpeed = 0.01f, glm::vec4 colour = glm::vec4(1.0f, 0.5f, 0.3f, 1.0));
 	Boid();
 
-	void move();
+	void move(float &deltaTime);
 	float getAngle();
 	float getX();
 	float getY();
 	void setFlockMates(std::vector<Boid>* flock);
 	glm::mat4 getTransMatrix();
+	void changeTimeModifier(float amount);
 };
